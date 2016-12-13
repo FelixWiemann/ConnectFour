@@ -39,7 +39,7 @@ namespace VierGewinnt
         private int playerNO;
         private int opponent;
         private int winWeight = 1;
-        private int looseWeight = -10;
+        private int looseWeight = -100;
         private int difficulty = 5;
         private static int[] lastPlayedPos = { 0, 0 };
 

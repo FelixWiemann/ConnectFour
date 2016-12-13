@@ -8,6 +8,21 @@ using System.IO;
 
 namespace VierGewinnt
 {
+
+    /// <summary>
+    /// TODO:
+    /// 1) Command-line arguments, changable during playing to test things
+    /// -l; --log
+    ///-h; --help
+    ///-pc; --PrintConsole
+    ///-ww
+    ///-lw
+    ///--iterationdepth
+    ///
+    /// 2) comment code
+    /// 3) enable 2 bots  
+    /// 4) logging to file
+    /// </summary>
     public static class Program
     {
 
@@ -28,7 +43,7 @@ namespace VierGewinnt
             }
             if (bwriteFile)
             {
-                File.AppendAllText(logPath, s + Environment.NewLine);
+                //File.AppendAllText(logPath, s + Environment.NewLine);
             }
         }
 
@@ -441,7 +456,7 @@ namespace VierGewinnt
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            File.Delete(logPath);
+            //File.Delete(logPath);
             Con4Bot bot = null ;
             bool won = false;
             bool replay = false;
@@ -494,7 +509,7 @@ namespace VierGewinnt
                     replay = playAgain();
                     if (replay)
                     {
-                        File.Delete(logPath);
+                        //File.Delete(logPath);
                         // reset to stay in loop
                         replay = false;
                         won = false;
