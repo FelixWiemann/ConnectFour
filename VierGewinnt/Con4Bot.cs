@@ -39,8 +39,8 @@ namespace VierGewinnt
         private int playerNO;
         private int opponent;
         private int winWeight = 1;
-        private int loseWeight = -10;
-        private int difficulty = 0;
+        private int looseWeight = -10;
+        private int difficulty = 5;
         private static int[] lastPlayedPos = { 0, 0 };
 
         public Con4Bot(int player, int difficulty, int opponent, int[,] board)
@@ -50,6 +50,19 @@ namespace VierGewinnt
             this.opponent = opponent;
             localBoard = copyBoard(board);
         }
+        public Con4Bot(int player, int difficulty, int opponent, int[,] board, int looseWeight, int winWeight)
+        {
+            playerNO = player;
+            this.difficulty = difficulty;
+            this.opponent = opponent;
+            localBoard = copyBoard(board);
+            this.looseWeight = looseWeight;
+            this.winWeight = winWeight;
+        }
+
+
+
+
         public void play()
         {
             int[] scores = { 0, 0, 0, 0, 0, 0, 0 };
@@ -62,20 +75,14 @@ namespace VierGewinnt
                 // check reseted board
                 scores[i] = checkBest(board, i, difficulty, playerNO);
             }
-            /*
-            int maxValue;
-            int maxIndex;
-            int count = 0;
-            do
+            while (Program.getFirstEmpty(best_column) == -1)
             {
-                maxValue = scores.Max();
-                maxIndex = scores.ToList().IndexOf(maxValue);
-                scores[maxIndex] = -33000000;
-                count++;
-            } while (Program.getFirstEmpty(maxIndex, board) == -1 && count < 50);*/
-
-
-
+                best_column += 1;
+                if (best_column == 6)
+                {
+                    best_column = 0;
+                }
+            }
             Program.play(playerNO, best_column);
         }
 
@@ -99,7 +106,7 @@ namespace VierGewinnt
         }
 
 
-        private int best_column = 6;
+        private int best_column = 0;
 
         private void printScore(int score, int depth)
         {
@@ -125,12 +132,7 @@ namespace VierGewinnt
             int[,] virtBoard = copyBoard(board);
             int[] preLastPlayed = { lastPlayedPos[0], lastPlayedPos[1] };
 
-            if (depth ==  1)
-            {
-                //Console.Write(".");
-            }
-
-            // depth not reached, otherwise return 0; do not play
+            // depth not reached, otherwise return default score; do not play
             if (depth == 0)
             {
                 return score;
@@ -156,8 +158,10 @@ namespace VierGewinnt
             else if (Program.checkwin(opponent, virtBoard, lastPlayedPos))
             {
                 //Program.drawBoard(board);
-                score = loseWeight*depth*10;
+                score = looseWeight*depth;
                 printScore(score, depth);
+                // make sure to enter here if loss imminent
+                best_column = column;
                 //print("BOTLOOSE");
                 return score;
             }
@@ -197,68 +201,6 @@ namespace VierGewinnt
             printScore(score, depth);
             // return score of node
             return score;
-
         }
-
-
-        /*
-        private int checkBesta(int[,] board,int column, int depth, int currPlayer)
-        {
-            print("cb, p: "+currPlayer +" x: "+column+" d: "+depth);
-            // play
-            int[,] preboard = board;
-            // swap players for next step
-            if (currPlayer == opponent)
-            {
-                currPlayer = playerNO;
-            }
-            else
-            {
-                currPlayer = opponent;
-            }
-
-            int score = 0;
-            // check every possibility
-            for (int i = 0; i < 7; i++)
-            {
-                board = copyBoard(preboard);
-                board = playLocal(currPlayer, column, board);
-                // only if valid entry
-                if (Program.getFirstEmpty(i, board) != -1)
-                {
-                    
-                    // return 0, if depth of recursion is reached and no winner of current 
-                    if (depth != 0)
-                    {
-                        // check whether bot would win or opponent
-                        if (Program.checkwin(playerNO, board, lastPlayedPos))
-                        {
-                           
-                            score += winWeight;
-                            print("BOTWIN");
-                            return score;
-                        }
-                        else if (Program.checkwin(opponent, board,lastPlayedPos))
-                        {
-                            // lost score -1
-                            score += loseWeight;
-                            print("BOTLOOSE");
-                            return score;
-                        }
-                        
-                        // not won or lost -> next player
-                        score  += checkBest(board,i, depth - 1, currPlayer);
-                    }
-                    else
-                    {
-                        
-                    }
-                }
-                
-            }
-            //print("s: "+score +" d: "+ depth);
-            return score; 
-            }*/
-
     }
 }

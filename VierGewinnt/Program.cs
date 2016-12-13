@@ -425,6 +425,17 @@ namespace VierGewinnt
         }
 
         /// <summary>
+        /// returns the y-value of first empty field on the board in the given column
+        /// </summary>
+        /// <param name="x">column</param>
+        /// <returns>y-value of the first empty field on the bord in the column</returns>
+        public static int getFirstEmpty(int x)
+        {
+            return getFirstEmpty(x, playBoard);
+        }
+
+
+        /// <summary>
         /// main routine
         /// </summary>
         /// <param name="args"></param>
