@@ -19,22 +19,150 @@ namespace VierGewinnt
     ///-lw
     ///--iterationdepth
     ///
+    /// 3) enable 2 bots
+    /// 5) extract player types to interface -> human player & bot player
+    /// 
+    /// Implemented TODO's  
     /// 2) comment code
-    /// 3) enable 2 bots  
     /// 4) logging to file
-    /// </summary>
+    /// 
+    /// </summary
     public static class Program
     {
-
-        /**
-         * Playboard
-         *   -> x 
-         * | y
-         * \/
-         * 
-         */
+        /// <summary>
+        /// Enumeration over Playertypes
+        /// </summary>
+        enum PlayerType { HUMAN_PLAYER, MACHINE_PLAYER };
+        /// <summary>
+        /// set Playertype of Player 1
+        /// </summary>
+        private static PlayerType Player1 = PlayerType.HUMAN_PLAYER;
+        /// <summary>
+        /// set Playertype of Player 2
+        /// </summary>
+        private static PlayerType Player2 = PlayerType.HUMAN_PLAYER;
+        /// <summary>
+        /// file name of logfile
+        /// </summary>
+        private static string sFileName = @"log.txt";
+        /// <summary>
+        /// file path of logfile
+        /// </summary>
+        private static string sFilePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Connect4\";
+        /// <summary>
+        /// connects file name and path
+        /// </summary>
+        private static string sFullLogFilePath = sFilePath + sFileName;
+        /// <summary>
+        /// player array. sets sign of player
+        /// </summary>
+        private static string[] players = { " ", "x", "o" };
+        /// <summary>
+        /// last played position on the board
+        /// !! y,x !! dafuq did i do?
+        /// </summary>
+        private static int[] lastPlayedPos = { 0, 0 };
+        /// <summary>
+        /// Board of current game of Connect four 
+        /// played position gets player number
+        /// not yet played = 0
+        /// use: board[y,x] = player number
+        /// </summary>
         private static int[,] playBoard = { { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 } };
 
+
+
+        /// <summary>
+        /// main routine
+        /// </summary>
+        /// <param name="args">starting arguments of the program</param>
+        public static void Main(string[] args)
+        {
+            // TODO parse arguments given to the program
+
+            // read player Types
+            Player1 = PlayerType.HUMAN_PLAYER;
+            Player2 = PlayerType.MACHINE_PLAYER;
+
+            // check whether log exists, if not, create directory
+            if (File.Exists(sFullLogFilePath))
+            {
+                File.Delete(sFullLogFilePath);
+            }
+            else
+            {
+                Directory.CreateDirectory(sFilePath);
+            }
+
+            Con4Bot bot = null;
+            bool won = false;
+            bool replay = false;
+            int currPlayer = 1;
+            int difficulty = 5;
+            print("");
+            print("Hello to Connect Four!");
+            menu();
+            // beginn with drawing the board
+            drawBoard(playBoard);
+            // roundcounter for tie
+            int roundcounter = 0;
+            while (!won || replay)
+            {
+                // set won to false
+                won = false;
+                // check roundcounter
+                if (roundcounter == 6 * 7)
+                {
+                    print("Tie!");
+                    won = true;
+                    replay = playAgain();
+                }
+                // play
+                if (Player2 == PlayerType.MACHINE_PLAYER && currPlayer == 2)
+                {
+                    bot = null;
+                    bot = new Con4Bot(currPlayer, difficulty, 1, playBoard);
+                    bot.play();
+
+                }
+                else
+                {
+                    play(currPlayer, readColumn(currPlayer));
+                }
+                roundcounter++;
+                won = checkwin(currPlayer, playBoard);
+                // swap player
+                if (currPlayer == 1)
+                {
+                    currPlayer = 2;
+                }
+                else
+                {
+                    currPlayer = 1;
+                }
+                // handle if won
+                if (won)
+                {
+                    replay = playAgain();
+                    if (replay)
+                    {
+                        //File.Delete(logPath);
+                        // reset to stay in loop
+                        replay = false;
+                        won = false;
+                        roundcounter = 0;
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// prints the given string to spezified locations
+        /// </summary>
+        /// <param name="s">string to print</param>
+        /// <param name="bprintConsole">print on console if true</param>
+        /// <param name="bwriteFile">print in file if true</param>
         internal static void print(string s, bool bprintConsole, bool bwriteFile)
         {
             if (bprintConsole)
@@ -43,57 +171,61 @@ namespace VierGewinnt
             }
             if (bwriteFile)
             {
-                //File.AppendAllText(logPath, s + Environment.NewLine);
+                File.AppendAllText(sFullLogFilePath, s + Environment.NewLine);
             }
         }
 
-        private static bool p1IsBot = false;
-        private static bool p2IsBot = false;
-        private static string logPath = @"C:\Users\DEU216269\Desktop\log.txt";
-
-        // playerarray
-        private static string[] players = {" ","x","o"};
-
-        // y,x dafuq did i do?
-        private static int[] lastPlayedPos = { 0, 0 };
-
+        /// <summary>
+        /// prints the given string NOT in the log file
+        /// you may choose to log into console
+        /// </summary>
+        /// <param name="s">string to print</param>
+        /// <param name="bprintConsole">whether to print on console or not</param>
         public static void print(string s, bool bprintConsole)
         {
             print(s, bprintConsole, false);
         }
 
+        /// <summary>
+        /// prints the given string on the console
+        /// </summary>
+        /// <param name="s">string to print on console</param>
         public static void print(string s)
         {
             print(s, true,false);
         }
-
-
-
+       
         /// <summary>
         /// draws the board of connect four
         /// </summary>
         public static void drawBoard(int[,] board)
         {
+            // whether to print on console or write in file
             bool bpc = true;
             bool bwf= true;
-            // clear
+            // clear console
             Console.Clear();
+            // header
             print("connect four:", bpc, bwf);
             // write colum-header
             print("|0|1|2|3|4|5|6|", bpc, bwf);
             string row = "";
             // write row for row
             for (int y = 0; y < 6; y++) { 
+                // seperator between rows
                 print("+-+-+-+-+-+-+-+", bpc, bwf);
                 for (int x = 0; x < 7; x++)
                 {
+                    // append each line
                     row += "|" + players[board[y, x]];
-                    //Console.Write("|" + players[playBoard[y, x]]);
                 }
+                // finalizerow
                 row += "|";
                 print(row, bpc, bwf);
+                // reset row
                 row = "";
             }
+            // finally print last row
             print("+-+-+-+-+-+-+-+", bpc, bwf);
         }
         
@@ -103,17 +235,18 @@ namespace VierGewinnt
         public static void resetBoard()
         {
             // set every value to zero
-            for (int x = 0; x < 6; x++)
+            for (int y = 0; y < 6; y++)
             {
-                for (int y = 0; y < 7; y++)
+                for (int x = 0; x < 7; x++)
                 {
-                    playBoard[x, y] = 0;
+                    playBoard[y, x] = 0;
                 }
             }
         }
 
         /// <summary>
-        /// sets the first free value in the given column x to the given player
+        /// Sets the first free value in the given column x to the given player.
+        /// WARINING: no check whether play is valid or not
         /// </summary>
         /// <param name="player">player currently playing</param>
         /// <param name="x">column the player wants to play</param>
@@ -232,18 +365,12 @@ namespace VierGewinnt
         /// <returns>true if won, false if not</returns>
         public static bool checkWinDiagonal(int player, int[,] board, int[] lastPlayedPos)
         {
-            bool b1;
-            bool b2;
-            bool b3;
-            bool b4;
-            // 4 cases: 2 at the end of line, 2 in middle
+            // 4 cases: 2 at the end of line, 2 in middle for each diagonal play
             for (int ncase = 1; ncase < 9; ncase++)
             {
                 switch (ncase)
                 {
                     case 1:
-                        b1 = lastPlayedPos[1] > 3;
-                        b2 = lastPlayedPos[0] > 2;
                         // pos at left most corner diagonal:\
                         if (lastPlayedPos[1] > 3 || lastPlayedPos[0]>2)
                         {
@@ -260,8 +387,6 @@ namespace VierGewinnt
                         break;
                     case 2:
                         // right most \
-                        b1 = lastPlayedPos[1] < 3;
-                        b2 = lastPlayedPos[0] < 3;
                         if (lastPlayedPos[1] < 3 || lastPlayedPos[0] < 3)
                         {
 
@@ -276,10 +401,6 @@ namespace VierGewinnt
                         break;
                     case 3:
                         //middle left \
-                        b1 = lastPlayedPos[1] == 0;
-                        b2 = lastPlayedPos[1] > 4;
-                        b3 = lastPlayedPos[0] == 0;
-                        b4 = lastPlayedPos[0] > 3;
                         if (lastPlayedPos[1] == 0 || lastPlayedPos[1] > 4 || lastPlayedPos[0] == 0 || lastPlayedPos[0] > 3)
                         {
                         }
@@ -293,10 +414,6 @@ namespace VierGewinnt
                         break;
                     case 4:
                         // middle right \
-                        b1 = lastPlayedPos[1] == 6;
-                        b2 = lastPlayedPos[1] < 2;
-                        b3 = lastPlayedPos[0] == 5;
-                        b4 = lastPlayedPos[0] < 2;
                         if (lastPlayedPos[1] == 6 || lastPlayedPos[1] < 2 || lastPlayedPos[0] == 5 || lastPlayedPos[0] < 2)
                         {
                         }
@@ -310,8 +427,6 @@ namespace VierGewinnt
                         break;
                     case 5:
                         // pos at left most corner /
-                        b1 = lastPlayedPos[1] > 3;
-                        b2 = lastPlayedPos[0] < 3;
                         if (lastPlayedPos[1] > 3 || lastPlayedPos[0] < 3)
                         {
 
@@ -327,8 +442,6 @@ namespace VierGewinnt
                         break;
                     case 6:
                         // right most /
-                        b1 = lastPlayedPos[1] < 3;
-                        b2 = lastPlayedPos[0] > 2;
                         if (lastPlayedPos[1] < 3 || lastPlayedPos[0] > 2)
                         {
 
@@ -343,10 +456,6 @@ namespace VierGewinnt
                         break;
                     case 7:
                         //middle left /
-                        b1 = lastPlayedPos[1] == 0;
-                            b2 = lastPlayedPos[1] > 4;
-                            b3 = lastPlayedPos[0] == 5;
-                            b4 = lastPlayedPos[0] < 2;
                         if (lastPlayedPos[1] == 0 || lastPlayedPos[1] > 4 || lastPlayedPos[0] == 5 || lastPlayedPos[0] < 2)
                         {
                         }
@@ -360,10 +469,6 @@ namespace VierGewinnt
                         break;
                     case 8:
                         // middle right /
-                        b1 = lastPlayedPos[1] == 6;
-                        b2 = lastPlayedPos[1] < 2;
-                        b3 = lastPlayedPos[0] == 0;
-                        b4 = lastPlayedPos[0] > 3;
                         if (lastPlayedPos[1] == 6 || lastPlayedPos[1] < 2 || lastPlayedPos[0] == 0 || lastPlayedPos[0] > 3)
                         {
                         }
@@ -381,11 +486,13 @@ namespace VierGewinnt
             }
             return false;
         }
-        
+
         /// <summary>
-        /// checks all win-possibilities for the player
+        /// checks all win-possibilities for the player on the given board and the given last played position
         /// </summary>
         /// <param name="player">player who did the last turn</param>
+        /// <param name="board">board to check</param>
+        /// <param name="lastPlayedPos">last played position by "player"</param>
         /// <returns>true if won, false if not</returns>
         public static bool checkwin(int player, int[,] board, int[] lastPlayedPos)
         {
@@ -411,6 +518,12 @@ namespace VierGewinnt
             return false;
         }
 
+        /// <summary>
+        /// checks all win-possibilities for the player on the given board
+        /// </summary>
+        /// <param name="player">player who did the last turn</param>
+        /// <param name="board">board to check</param>
+        /// <returns>true if won, false if not</returns>
         public static bool checkwin(int player, int[,] board)
         {
             return checkwin(player, board, lastPlayedPos);
@@ -418,10 +531,11 @@ namespace VierGewinnt
         #endregion
 
         /// <summary>
-        /// returns the y-value of first empty field on the board in the given column
+        /// returns the y-value of first empty field on the board in the given column in the given board
         /// </summary>
         /// <param name="x">column</param>
-        /// <returns>y-value of the first empty field on the bord in the column</returns>
+        /// <param name="board">board to check the first free position in</param>
+        /// <returns>y-value of the first empty field on the bord in the column, -1 if no empty field</returns>
         public static int getFirstEmpty(int x,int[,] board)
         {
             int y = 0;
@@ -443,83 +557,12 @@ namespace VierGewinnt
         /// returns the y-value of first empty field on the board in the given column
         /// </summary>
         /// <param name="x">column</param>
-        /// <returns>y-value of the first empty field on the bord in the column</returns>
+        /// <returns>y-value of the first empty field on the bord in the column, -1 if no empty field</returns>
         public static int getFirstEmpty(int x)
         {
             return getFirstEmpty(x, playBoard);
         }
 
-
-        /// <summary>
-        /// main routine
-        /// </summary>
-        /// <param name="args"></param>
-        public static void Main(string[] args)
-        {
-            //File.Delete(logPath);
-            Con4Bot bot = null ;
-            bool won = false;
-            bool replay = false;
-            int currPlayer = 1;
-            int difficulty = 5;
-            print("");
-            print("Hello to Connect Four!");
-            menu();
-            // beginn with drawing the board
-            drawBoard(playBoard);
-            // roundcounter for tie
-            int roundcounter = 0;
-            while (!won || replay)
-            {
-                // set won to false
-                won = false;
-                // check roundcounter
-                if (roundcounter == 6 * 7)
-                {
-                    print("Tie!");
-                    won = true;
-                    replay = playAgain();
-                }
-                // play
-                if (p2IsBot && currPlayer == 2)
-                {
-                    bot = null;
-                    bot = new Con4Bot(currPlayer, difficulty, 1, playBoard);
-                    bot.play();
-
-                }
-                else
-                {
-                    play(currPlayer, readColumn(currPlayer));
-                }
-                roundcounter++;
-                won = checkwin(currPlayer,playBoard);
-                // swap player
-                if (currPlayer == 1)
-                {
-                    currPlayer = 2;
-                }
-                else
-                {
-                    currPlayer = 1;
-                }
-                // handle if won
-                if (won)
-                {
-                    replay = playAgain();
-                    if (replay)
-                    {
-                        //File.Delete(logPath);
-                        // reset to stay in loop
-                        replay = false;
-                        won = false;
-                        roundcounter = 0;
-                    }
-                }
-               
-                
-            }
-        }
 
         /// <summary>
         /// asks players whether to play again
@@ -607,12 +650,13 @@ namespace VierGewinnt
                         Console.ReadLine();
                     }
                 }
-                
             }
             return column;
         }
 
-
+        /// <summary>
+        /// playing the menu of the game
+        /// </summary>
         public static void menu()
         {
             int nChoice = 0;
@@ -632,18 +676,20 @@ namespace VierGewinnt
                 print("You are always able to come back here by pressing m while playing");
                 print("");
                 print("");
+                // get user selection
                 sChoice = Console.ReadLine();
                 Int32.TryParse(sChoice, out nChoice);
+                // do over coice of user
                 switch (nChoice)
                 {
                     case 1:
-                        p1IsBot = false;
-                        p2IsBot = false;
+                        Player1 = PlayerType.HUMAN_PLAYER;
+                        Player2 = PlayerType.HUMAN_PLAYER;
                         return;
                         
                     case 2:
-                        p1IsBot = false;
-                        p2IsBot = true;
+                        Player1 = PlayerType.HUMAN_PLAYER;
+                        Player2 = PlayerType.MACHINE_PLAYER;
                         return;
                     case 3:
                         Console.Clear();
@@ -665,15 +711,6 @@ namespace VierGewinnt
                 Console.ReadLine();
                 Console.Clear();
             }
-
-            
         }
-
-
-
-
-
-
     }
-    
 }

@@ -8,33 +8,12 @@ namespace VierGewinnt
 {
     public class Con4Bot
     {
-
         private static bool bprint = true;
         private static bool writeFile = true;
-
-        private static void print(string s)
-        {
-            Program.print(s, bprint, writeFile);
-        }
-        private static void print(string s, bool bprint, bool writeFile)
-        {
-            Program.print(s, bprint, writeFile);
-        }
-
-
-        private int[,] copyBoard(int[,] boardToCopy)
-        {
-            int[,] board = { { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 } };
-            for (int x = 0; x < 6; x++)
-            {
-                for (int y = 0; y < 7; y++)
-                {
-                    board[x, y] = boardToCopy[x, y];
-                }
-            }
-            return board;
-        }
-
+        public static bool bAccurateLog = false;
+        /// <summary>
+        /// current board stored by bot
+        /// </summary>
         private int[,] localBoard = { { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 } };
         private int playerNO;
         private int opponent;
@@ -42,7 +21,15 @@ namespace VierGewinnt
         private int looseWeight = -100;
         private int difficulty = 5;
         private static int[] lastPlayedPos = { 0, 0 };
+        private int best_column = 0;
 
+        /// <summary>
+        /// constructor for the bot 
+        /// </summary>
+        /// <param name="player">player the bot shall be</param>
+        /// <param name="difficulty">difficulty the bot should have</param>
+        /// <param name="opponent">opponent of the bot</param>
+        /// <param name="board">board to play on</param>
         public Con4Bot(int player, int difficulty, int opponent, int[,] board)
         {
             playerNO = player;
@@ -50,8 +37,18 @@ namespace VierGewinnt
             this.opponent = opponent;
             localBoard = copyBoard(board);
         }
+        /// <summary>
+        /// Constructor for the bot
+        /// </summary>
+        /// <param name="player">player the bot shall be</param>
+        /// <param name="difficulty">difficulty the bot should have</param>
+        /// <param name="opponent">opponent of the bot</param>
+        /// <param name="board">board to play on</param>
+        /// <param name="looseWeight">loosing weight of the bot</param>
+        /// <param name="winWeight">winning weight of the bot</param>
         public Con4Bot(int player, int difficulty, int opponent, int[,] board, int looseWeight, int winWeight)
         {
+            // set all local vars
             playerNO = player;
             this.difficulty = difficulty;
             this.opponent = opponent;
@@ -60,21 +57,64 @@ namespace VierGewinnt
             this.winWeight = winWeight;
         }
 
+        /// <summary>
+        /// prints the given string, using <seealso cref="Program.print(string)"/>
+        /// </summary>
+        private static void print(string s)
+        {
+            Program.print(s, bprint, writeFile);
+        }
+        /// <summary>
+        /// prints the given string, using <seealso cref="Program.print(string, bool, bool)"/>
+        /// </summary>
+        private static void print(string s, bool bprint, bool writeFile)
+        {
+            Program.print(s, bprint, writeFile);
+        }
+
+        /// <summary>
+        /// copy the given board in a new instance
+        /// </summary>
+        /// <param name="boardToCopy"></param>
+        /// <returns></returns>
+        private int[,] copyBoard(int[,] boardToCopy)
+        {
+            // create new board
+            int[,] board = { { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 } };
+            // copy all positions to the new board
+            for (int y = 0; y < 6; y++)
+            {
+                for (int x = 0; x < 7; x++)
+                {
+                    board[y, x] = boardToCopy[y, x];
+                }
+            }
+            // return board
+            return board;
+        }
 
 
 
+
+        /// <summary>
+        /// play of the bot
+        /// </summary>
         public void play()
         {
+            // init array of scores for different possibilities
             int[] scores = { 0, 0, 0, 0, 0, 0, 0 };
+            // copy the board
             int[,] board = copyBoard(localBoard);
-            //int rand = new Random().Next(0, 6);
+
             Console.Write("bot is thinking.");
-            for (int i = 0; i < 7; i++)
+            // check each possibility
+            for (int y = 0; y < 7; y++)
             {
                 board = copyBoard(localBoard);
                 // check reseted board
-                scores[i] = checkBest(board, i, difficulty, playerNO);
+                scores[y] = checkBest(board, y, difficulty, playerNO);
             }
+            // check the best possibility. if valid, do it, otherwise change column
             while (Program.getFirstEmpty(best_column) == -1)
             {
                 best_column += 1;
@@ -83,6 +123,7 @@ namespace VierGewinnt
                     best_column = 0;
                 }
             }
+            // play the game 
             Program.play(playerNO, best_column);
         }
 
@@ -94,7 +135,9 @@ namespace VierGewinnt
         public int[,] playLocal(int player, int x, int[,] board)
         {
             int[,] pBoard = copyBoard(board);
-            //print("pl, p: " + player + " x: " + x);
+            if (bAccurateLog) {
+                print("playLocal: p= " + player + "; x= " + x);
+            }
             // store played position fpr further use
             lastPlayedPos[0] = Program.getFirstEmpty(x, pBoard); //y
             lastPlayedPos[1] = x; //x
@@ -105,28 +148,37 @@ namespace VierGewinnt
 
         }
 
-
-        private int best_column = 0;
-
+        /// <summary>
+        /// prints the given score formatted to the depth
+        /// </summary>
+        /// <param name="score">score to print</param>
+        /// <param name="depth">depth</param>
         private void printScore(int score, int depth)
         {
-            string s = "|-";
+            // |(-)n:score
+            string s = "|";
             for (int i = difficulty; i > depth; i--)
             {
                 s += "-";
-
             }
             s += ":" +score;
             print(s,false,false);
         }
 
-
+        /// <summary>
+        /// checks the best solution for a play by the bot
+        /// </summary>
+        /// <param name="board">board to play on</param>
+        /// <param name="column">column to play</param>
+        /// <param name="depth">how many more iterations should be done</param>
+        /// <param name="currPlayer">player whose turn it is</param>
+        /// <returns></returns>
         private int checkBest(int[,] board, int column, int depth, int currPlayer)
         {
-            
+
             // init score for node
-            int score = -100; // no move worse than loose move
-            // store board at beginning of testing node
+            int score = -100; // no move is pretty bad
+            // store different things at beginning of testing node
             int[,] preBoard = copyBoard(board);
             int prePlayer = currPlayer;
             int[,] virtBoard = copyBoard(board);
@@ -137,13 +189,15 @@ namespace VierGewinnt
             {
                 return score;
             }
-            // if no valid play, return 0
+            // if no valid play, return default score; do not play
             if (Program.getFirstEmpty(column, board) == -1)
             {
                 return score;
             }
             // log
-            //print("cb, p: " + currPlayer + " x: " + column + " d: " + depth);
+            if (bAccurateLog) { 
+                print("checkBest: p= " + currPlayer + "; x= " + column + "; d= " + depth);
+            }
             // valid -> play
             virtBoard = playLocal(prePlayer, column, virtBoard);
             // check for win or loose
