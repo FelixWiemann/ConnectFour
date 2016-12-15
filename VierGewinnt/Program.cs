@@ -56,7 +56,7 @@ namespace VierGewinnt
         /// <summary>
         /// player array. sets sign of player
         /// </summary>
-        private static string[] players = { " ", "x", "o" };
+        private static string[] players = { " ", "X", "O" };
         /// <summary>
         /// last played position on the board
         /// !! y,x !! dafuq did i do?
@@ -81,8 +81,8 @@ namespace VierGewinnt
             // TODO parse arguments given to the program
             int difficulty = 5;
             // read player Types
-            Player1 = new Human(1,2, playBoard);
-            Player2 = new Con4Bot(2, difficulty, 1, playBoard);
+            Player1 = new Human(1, 2, playBoard);
+            Player2 = new Con4Bot(2, 5, 1, playBoard);
 
             // check whether log exists, if not, create directory
             if (File.Exists(sFullLogFilePath))
@@ -123,7 +123,7 @@ namespace VierGewinnt
                 }
                 else
                 {
-                    Player1.LocalBoard = copyBoard(playBoard);
+                    Player2.LocalBoard = copyBoard(playBoard);
                     Player2.play();
                 }
                 // play
@@ -507,23 +507,35 @@ namespace VierGewinnt
         /// <returns>true if won, false if not</returns>
         public static bool checkwin(int player, int[,] board, int[] lastPlayedPos)
         {
-            // check all possibilities
-            if (checkWinDown(player,board,lastPlayedPos))
-            {
-                //print("congrats player " + player + ", you won (down)!");
+            return checkwin(player, board, lastPlayedPos, true);
 
-                return true ;
+        }
+
+        public static bool checkwin(int player, int[,] board, int[] lastPlayedPos, bool bPrint)
+        {
+            // check all possibilities
+            if (checkWinDown(player, board, lastPlayedPos))
+            {
+                if (bPrint)
+                {
+                    print("congrats player " + player + ", you won (down)!");
+                }
+                return true;
             }
             if (checkWinSideways(player, board, lastPlayedPos))
             {
-                
-                //print("congrats player " + player + ", you won (sideways)!");
+                if (bPrint)
+                {
+                    print("congrats player " + player + ", you won (sideways)!");
+                }
                 return true;
             }
             if (checkWinDiagonal(player, board, lastPlayedPos))
             {
-
-                //print("congrats player " + player + ", you won (diagonal)!");
+                if (bPrint)
+                {
+                    print("congrats player " + player + ", you won (diagonal)!");
+                }
                 return true;
             }
             return false;

@@ -57,7 +57,7 @@ namespace VierGewinnt
             // copy the board
             int[,] board = Program.copyBoard(LocalBoard);
 
-            Console.Write("bot is thinking.");
+            Console.Write("bot is thinking");
             // check each possibility
             for (int y = 0; y < 7; y++)
             {
@@ -152,7 +152,7 @@ namespace VierGewinnt
             // valid -> play
             virtBoard = playLocal(prePlayer, column, virtBoard);
             // check for win or loose
-            if (Program.checkwin(nPlayerNo, virtBoard, lastPlayedPos))
+            if (Program.checkwin(nPlayerNo, virtBoard, lastPlayedPos,false))
             {
                 //Program.drawBoard(board);
                 score = winWeight*depth;
@@ -160,7 +160,7 @@ namespace VierGewinnt
                 //print("BOTWIN");
                 return score;
             }
-            else if (Program.checkwin(nOpponentNo, virtBoard, lastPlayedPos))
+            else if (Program.checkwin(nOpponentNo, virtBoard, lastPlayedPos,false))
             {
                 //Program.drawBoard(board);
                 score = looseWeight*depth;
