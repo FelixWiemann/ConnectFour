@@ -36,11 +36,11 @@ namespace VierGewinnt
         /// <summary>
         /// set Playertype of Player 1
         /// </summary>
-        private static PlayerType Player1 = PlayerType.HUMAN_PLAYER;
+        private static Player Player1;
         /// <summary>
         /// set Playertype of Player 2
         /// </summary>
-        private static PlayerType Player2 = PlayerType.HUMAN_PLAYER;
+        private static Player Player2;
         /// <summary>
         /// file name of logfile
         /// </summary>
@@ -79,10 +79,10 @@ namespace VierGewinnt
         public static void Main(string[] args)
         {
             // TODO parse arguments given to the program
-
+            int difficulty = 5;
             // read player Types
-            Player1 = PlayerType.HUMAN_PLAYER;
-            Player2 = PlayerType.MACHINE_PLAYER;
+            Player1 = new Human(1,2, playBoard);
+            Player2 = new Con4Bot(2, difficulty, 1, playBoard);
 
             // check whether log exists, if not, create directory
             if (File.Exists(sFullLogFilePath))
@@ -93,12 +93,10 @@ namespace VierGewinnt
             {
                 Directory.CreateDirectory(sFilePath);
             }
-
-            Con4Bot bot = null;
             bool won = false;
             bool replay = false;
             int currPlayer = 1;
-            int difficulty = 5;
+            
             print("");
             print("Hello to Connect Four!");
             menu();
@@ -117,8 +115,20 @@ namespace VierGewinnt
                     won = true;
                     replay = playAgain();
                 }
+
+                if (currPlayer == 1)
+                {
+                    Player1.LocalBoard = copyBoard(playBoard);
+                    Player1.play();
+                }
+                else
+                {
+                    Player1.LocalBoard = copyBoard(playBoard);
+                    Player2.play();
+                }
                 // play
-                if (Player2 == PlayerType.MACHINE_PLAYER && currPlayer == 2)
+                /*
+                if (Player2.PType == Player.PlayerType.MACHINE_PLAYER && currPlayer == 2)
                 {
                     bot = null;
                     bot = new Con4Bot(currPlayer, difficulty, 1, playBoard);
@@ -127,8 +137,9 @@ namespace VierGewinnt
                 }
                 else
                 {
+
                     play(currPlayer, readColumn(currPlayer));
-                }
+                }*/
                 roundcounter++;
                 won = checkwin(currPlayer, playBoard);
                 // swap player
@@ -655,6 +666,28 @@ namespace VierGewinnt
         }
 
         /// <summary>
+        /// copy the given board in a new instance
+        /// </summary>
+        /// <param name="boardToCopy"></param>
+        /// <returns></returns>
+        public static int[,] copyBoard(int[,] boardToCopy)
+        {
+            // create new board
+            int[,] board = { { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 } };
+            // copy all positions to the new board
+            for (int y = 0; y < 6; y++)
+            {
+                for (int x = 0; x < 7; x++)
+                {
+                    board[y, x] = boardToCopy[y, x];
+                }
+            }
+            // return board
+            return board;
+        }
+
+
+        /// <summary>
         /// playing the menu of the game
         /// </summary>
         public static void menu()
@@ -683,13 +716,13 @@ namespace VierGewinnt
                 switch (nChoice)
                 {
                     case 1:
-                        Player1 = PlayerType.HUMAN_PLAYER;
-                        Player2 = PlayerType.HUMAN_PLAYER;
+                        Player1.PType = Player.PlayerType.HUMAN_PLAYER;
+                        Player2.PType = Player.PlayerType.HUMAN_PLAYER;
                         return;
                         
                     case 2:
-                        Player1 = PlayerType.HUMAN_PLAYER;
-                        Player2 = PlayerType.MACHINE_PLAYER;
+                        Player1.PType = Player.PlayerType.HUMAN_PLAYER;
+                        Player2.PType = Player.PlayerType.MACHINE_PLAYER;
                         return;
                     case 3:
                         Console.Clear();
