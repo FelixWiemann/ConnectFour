@@ -25,7 +25,7 @@ namespace VierGewinnt
     /// Implemented TODO's  
     /// 2) comment code
     /// 4) logging to file
-    /// 
+    ///  
     /// </summary
     public static class Program
     {
