@@ -10,7 +10,7 @@ namespace VierGewinnt
     {
         private int winWeight = 1;
         private int looseWeight = -100;
-        private int difficulty = 5;
+        public int nDifficulty = 5;
 
         private static int[] lastPlayedPos = { 0, 0 };
 
@@ -24,7 +24,7 @@ namespace VierGewinnt
         /// <param name="board">board to play on</param>
         public Con4Bot(int nPlayerNo, int difficulty, int nOpponentNo, int[,] board) : base(nPlayerNo, nOpponentNo, board)
         {
-            this.difficulty = difficulty;
+            this.nDifficulty = difficulty;
             LocalBoard = Program.copyBoard(board);
             PType = PlayerType.MACHINE_PLAYER;
     }
@@ -39,7 +39,7 @@ namespace VierGewinnt
         /// <param name="winWeight">winning weight of the bot</param>
         public Con4Bot(int nPlayerNo, int difficulty, int nOpponentNo, int[,] board, int looseWeight, int winWeight) : base(nPlayerNo, nOpponentNo, board)
         {
-            this.difficulty = difficulty;
+            this.nDifficulty = difficulty;
             LocalBoard = Program.copyBoard(board);
             this.looseWeight = looseWeight;
             this.winWeight = winWeight;
@@ -63,13 +63,13 @@ namespace VierGewinnt
             {
                 board = Program.copyBoard(LocalBoard);
                 // check reseted board
-                scores[y] = checkBest(board, y, difficulty, nPlayerNo);
+                scores[y] = checkBest(board, y, nDifficulty, nPlayerNo);
             }
             // check the best possibility. if valid, do it, otherwise change column
             while (Program.getFirstEmpty(best_column) == -1)
             {
                 best_column += 1;
-                if (best_column == 6)
+                if (best_column == 7)
                 {
                     best_column = 0;
                 }
@@ -108,7 +108,7 @@ namespace VierGewinnt
         {
             // |(-)n:score
             string s = "|";
-            for (int i = difficulty; i > depth; i--)
+            for (int i = nDifficulty; i > depth; i--)
             {
                 s += "-";
             }

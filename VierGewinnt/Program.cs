@@ -70,6 +70,7 @@ namespace VierGewinnt
         /// </summary>
         private static int[,] playBoard = { { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 } };
 
+        
 
 
         /// <summary>
@@ -78,11 +79,10 @@ namespace VierGewinnt
         /// <param name="args">starting arguments of the program</param>
         public static void Main(string[] args)
         {
-            // TODO parse arguments given to the program
-            int difficulty = 5;
+            Player1 = new Human(1,2,playBoard);
+            Player1 = new Human(2, 1, playBoard);
             // read player Types
-            Player1 = new Human(1, 2, playBoard);
-            Player2 = new Con4Bot(2, 5, 1, playBoard);
+            interpretArgs(args);
 
             // check whether log exists, if not, create directory
             if (File.Exists(sFullLogFilePath))
@@ -99,7 +99,7 @@ namespace VierGewinnt
             
             print("");
             print("Hello to Connect Four!");
-            menu();
+            //menu();
             // beginn with drawing the board
             drawBoard(playBoard);
             // roundcounter for tie
@@ -111,9 +111,11 @@ namespace VierGewinnt
                 // check roundcounter
                 if (roundcounter == 6 * 7)
                 {
-                    print("Tie!");
+                    print("Tie!",true,true);
+                    drawBoard(playBoard,true);
                     won = true;
-                    replay = playAgain();
+                    return;
+                    //replay = playAgain();
                 }
 
                 if (currPlayer == 1)
@@ -126,20 +128,7 @@ namespace VierGewinnt
                     Player2.LocalBoard = copyBoard(playBoard);
                     Player2.play();
                 }
-                // play
-                /*
-                if (Player2.PType == Player.PlayerType.MACHINE_PLAYER && currPlayer == 2)
-                {
-                    bot = null;
-                    bot = new Con4Bot(currPlayer, difficulty, 1, playBoard);
-                    bot.play();
-
-                }
-                else
-                {
-
-                    play(currPlayer, readColumn(currPlayer));
-                }*/
+                
                 roundcounter++;
                 won = checkwin(currPlayer, playBoard);
                 // swap player
@@ -154,7 +143,9 @@ namespace VierGewinnt
                 // handle if won
                 if (won)
                 {
-                    replay = playAgain();
+                    drawBoard(playBoard,true);
+                    return;
+                    //replay = playAgain();
                     if (replay)
                     {
                         //File.Delete(logPath);
@@ -211,9 +202,13 @@ namespace VierGewinnt
         /// </summary>
         public static void drawBoard(int[,] board)
         {
+            drawBoard(board, false);
+        }
+
+        public static void drawBoard(int[,] board, bool bwf){
             // whether to print on console or write in file
             bool bpc = true;
-            bool bwf= true;
+            
             // clear console
             Console.Clear();
             // header
@@ -222,7 +217,8 @@ namespace VierGewinnt
             print("|0|1|2|3|4|5|6|", bpc, bwf);
             string row = "";
             // write row for row
-            for (int y = 0; y < 6; y++) { 
+            for (int y = 0; y < 6; y++)
+            {
                 // seperator between rows
                 print("+-+-+-+-+-+-+-+", bpc, bwf);
                 for (int x = 0; x < 7; x++)
@@ -757,5 +753,85 @@ namespace VierGewinnt
                 Console.Clear();
             }
         }
+
+        public static void interpretArgs(string[] args)
+        {
+            /// -l; --log
+            ///-h; --help
+            ///-pc; --PrintConsole
+            ///-ww
+            ///-lw
+            ///--iterationdepth
+            for (int i=0; i < args.Length; i++)
+            {
+
+                if (args[i].Equals("-p1"))
+                {
+                    if (args[i+1].Equals("COM")){
+                        Player1 = new Con4Bot(1, Convert.ToInt32(args[i + 4]), 2, playBoard);
+                        Player1.WinWeight =  Convert.ToInt32(args[i + 2]);
+                        Player1.LooseWeight = Convert.ToInt32(args[i + 3]);
+                    }
+                    else if (args[i + 1].Equals("HUM"))
+                    {
+                        Player1 = new Human(1, 2, playBoard);
+                    }
+                    else
+                    {
+                        print("player type " + args[i + 1] + " unknown");
+                    }
+                    print("player 1 is " + args[i+1]);
+                }
+                if (args[i].Equals("-p2"))
+                {
+                    if (args[i + 1].Equals("COM"))
+                    {
+                        Player2 = new Con4Bot(2, Convert.ToInt32(args[i + 4]), 1, playBoard);
+                        Player2.WinWeight = Convert.ToInt32(args[i + 2]);
+                        Player2.LooseWeight = Convert.ToInt32(args[i + 3]);
+                    }
+                    else if (args[i + 1].Equals("HUM"))
+                    {
+                        Player2 = new Human(2, 1, playBoard);
+                    }
+                    else
+                    {
+                        print("player type " + args[i + 1] + " unknown");
+                    }
+                    print("player 1 is " + args[i + 1]);
+                }
+
+
+                // detect logging
+
+                if (args[i].Equals("-l") || args[i].Equals("--log"))
+                {
+                    print("now logging");
+                }
+                if (args[i].Equals("-h") || args[i].Equals("--help"))
+                {
+                    print("now helping");
+                }
+                if (args[i].Equals("-pc") || args[i].Equals("--PrintConsole"))
+                {
+                    print("printing console");
+                }
+                if (args[i].Equals("-ww"))
+                {
+
+                    print("Win Weigt = " + args[i+1]);
+                }
+                if (args[i].Equals("-lw"))
+                {
+                    print("loose weight" + args[i + 1]);
+                }
+                if (args[i].Equals("--iterationdepth"))
+                {
+                    print("it depth = " + args[i + 1]);
+                }
+            }
+            //Console.ReadKey();
+        }
+
     }
 }

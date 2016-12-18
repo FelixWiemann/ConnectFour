@@ -31,6 +31,47 @@ namespace VierGewinnt
         public int nOpponentNo = 0;
         private PlayerType pType;
 
+        //
+        private int nIterationDepth = 0;
+        private int nWinWeight = 0;
+        private int nLooseWeight = 0;
+
+        public int IterationDepth
+        {
+            get
+            {
+                return nIterationDepth;
+            }
+            set
+            {
+                nIterationDepth = value;
+            }
+        }
+        public int LooseWeight
+        {
+            get
+            {
+                return nLooseWeight;
+            }
+            set
+            {
+                nLooseWeight = value;
+            }
+        }
+        public int WinWeight
+        {
+            get
+            {
+                return nWinWeight;
+            }
+            set
+            {
+                nWinWeight = value;
+            }
+        }
+
+
+
         /// <summary>
         /// current board stored by bot
         /// </summary>
@@ -62,7 +103,15 @@ namespace VierGewinnt
             }
         }
 
+        public void setLoggingData(bool bPrint, bool bWriteFile, bool bAccurateLog)
+        {
+            this.bPrint = bPrint;
+            this.bWriteFile = bWriteFile;
+            this.bAccurateLog = bAccurateLog;
+        }
        
+     
+
 
         public enum PlayerType { HUMAN_PLAYER, MACHINE_PLAYER };
         public Player(int nPlayerNo, int nOpponentNo, bool bPrint, bool bWriteFile)
