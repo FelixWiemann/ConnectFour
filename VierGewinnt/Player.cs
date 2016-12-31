@@ -109,6 +109,11 @@ namespace VierGewinnt
             this.bWriteFile = bWriteFile;
             this.bAccurateLog = bAccurateLog;
         }
+
+        public void setLogPath(string path)
+        {
+            sFullLogFilePath = path;
+        }
        
      
 

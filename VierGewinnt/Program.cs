@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace VierGewinnt
 {
@@ -44,7 +45,7 @@ namespace VierGewinnt
         /// <summary>
         /// file name of logfile
         /// </summary>
-        private static string sFileName = @"log.txt";
+        private static string sFileName = @"log";
         /// <summary>
         /// file path of logfile
         /// </summary>
@@ -80,19 +81,17 @@ namespace VierGewinnt
         public static void Main(string[] args)
         {
             Player1 = new Human(1,2,playBoard);
-            Player1 = new Human(2, 1, playBoard);
+            Player2 = new Human(2, 1, playBoard);
             // read player Types
             interpretArgs(args);
-
+            //int i = 0;
             // check whether log exists, if not, create directory
-            if (File.Exists(sFullLogFilePath))
-            {
-                File.Delete(sFullLogFilePath);
-            }
-            else
-            {
-                Directory.CreateDirectory(sFilePath);
-            }
+            //while (File.Exists(sFullLogFilePath))
+            //{
+                //sFullLogFilePath = sFilePath + sFileName + i.ToString();
+                //i++;
+            //}
+            //Directory.CreateDirectory(sFilePath);
             bool won = false;
             bool replay = false;
             int currPlayer = 1;
@@ -768,9 +767,16 @@ namespace VierGewinnt
                 if (args[i].Equals("-p1"))
                 {
                     if (args[i+1].Equals("COM")){
-                        Player1 = new Con4Bot(1, Convert.ToInt32(args[i + 4]), 2, playBoard);
-                        Player1.WinWeight =  Convert.ToInt32(args[i + 2]);
-                        Player1.LooseWeight = Convert.ToInt32(args[i + 3]);
+                        if (Regex.IsMatch(args[i + 4], @"^\d+$") && Regex.IsMatch(args[i + 2], @"^\d+$") && Regex.IsMatch(args[i + 3], @"^\d+$"))
+                        {
+                            Player1 = new Con4Bot(1, Convert.ToInt32(args[i + 4]), 2, playBoard);
+                            Player1.WinWeight = Convert.ToInt32(args[i + 2]);
+                            Player1.LooseWeight = Convert.ToInt32(args[i + 3]);
+                        }
+                        else
+                        {
+                            error("playerarguments must be of type integer");
+                        }
                     }
                     else if (args[i + 1].Equals("HUM"))
                     {
@@ -778,7 +784,7 @@ namespace VierGewinnt
                     }
                     else
                     {
-                        print("player type " + args[i + 1] + " unknown");
+                        error("player type " + args[i + 1] + " unknown");
                     }
                     print("player 1 is " + args[i+1]);
                 }
@@ -796,9 +802,9 @@ namespace VierGewinnt
                     }
                     else
                     {
-                        print("player type " + args[i + 1] + " unknown");
+                        error("player type " + args[i + 1] + " unknown");
                     }
-                    print("player 1 is " + args[i + 1]);
+                    print("player 2 is " + args[i + 1]);
                 }
 
 
@@ -806,31 +812,79 @@ namespace VierGewinnt
 
                 if (args[i].Equals("-l") || args[i].Equals("--log"))
                 {
+                    
+                    //Player1.setLoggingData()
                     print("now logging");
                 }
                 if (args[i].Equals("-h") || args[i].Equals("--help"))
                 {
                     print("now helping");
-                }
-                if (args[i].Equals("-pc") || args[i].Equals("--PrintConsole"))
-                {
-                    print("printing console");
-                }
-                if (args[i].Equals("-ww"))
+                }                
+                if (args[i].Equals("--logfile"))
                 {
 
-                    print("Win Weigt = " + args[i+1]);
+                    sFullLogFilePath = sFilePath + args[i + 1];
+                    if (args[i + 1].Contains("\\") || args[i + 1].Contains("/"))
+                    {
+                        error("filename may not have path in it");
+                    }
+                    else
+                    {
+                        
+                        Player1.setLogPath(sFullLogFilePath);
+                        Player2.setLogPath(sFullLogFilePath);
+                    }
                 }
-                if (args[i].Equals("-lw"))
+                if (args[i].Equals("--logpath"))
                 {
-                    print("loose weight" + args[i + 1]);
-                }
-                if (args[i].Equals("--iterationdepth"))
-                {
-                    print("it depth = " + args[i + 1]);
+                    sFullLogFilePath = args[i + 1];
+                    int inBack = sFullLogFilePath.LastIndexOf("\\");
+                    int inSlash = sFullLogFilePath.LastIndexOf("/");
+                    if (inBack>inSlash){
+                        inSlash  = inBack;
+                    }
+                    string path = sFullLogFilePath.Substring(0, sFullLogFilePath.Length - (sFullLogFilePath.Length - inSlash));
+
+                    if (Directory.Exists(path))
+                    {
+                        Player1.setLogPath(sFullLogFilePath);
+                        Player2.setLogPath(sFullLogFilePath);
+                        
+                    }
+                    else
+                    {
+                        print("path not exsitant");
+                        print("create path? - Y/N");
+                        string res = Console.ReadLine().ToLower();
+                        switch (res)
+                        {
+                            case "y":
+                                Directory.CreateDirectory(path);
+                                Player1.setLogPath(sFullLogFilePath);
+                                Player2.setLogPath(sFullLogFilePath);
+                                break;
+                            case "n":
+                                error("path not existant");
+                                break;
+                            default:
+                                error("unknown input");
+                                break;
+
+                        }
+                    }
                 }
             }
-            //Console.ReadKey();
+        }
+
+
+        public static void error(string errorMsg)
+        {
+            print("\noups - an error occured:\n");
+            print(errorMsg);
+            print("\nexiting game\n");
+            print("Press any key to acknowledge");
+            Console.ReadKey();
+            Environment.Exit(0);
         }
 
     }
