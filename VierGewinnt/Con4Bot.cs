@@ -9,7 +9,7 @@ namespace VierGewinnt
     public class Con4Bot:Player
     {
         private int winWeight = 1;
-        private int looseWeight = -100;
+        private int looseWeight = -1;
         public int nDifficulty = 5;
 
         private static int[] lastPlayedPos = { 0, 0 };
