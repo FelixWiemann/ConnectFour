@@ -88,7 +88,7 @@ namespace VierGewinnt
         public static void Main(string[] args)
         {
             // dirty: catch all errors
-            try
+           // try
             {
                 // set defaults
                 Player1 = new Human(1, 2, nPlayBoard);
@@ -166,6 +166,7 @@ namespace VierGewinnt
                     // handle if won
                     if (bWon)
                     {
+                        Console.ReadLine();
                         drawBoard(nPlayBoard, true);
                         bReplayRequested = playAgain();
                         if (bReplayRequested)
@@ -179,10 +180,11 @@ namespace VierGewinnt
                 }
             }
             // at least sending Error-Message to user
-            catch (Exception e)
-            {
-                error(e.Message);
-            }
+            //catch (Exception e)
+            //{
+            
+            //error(e.Message);
+           // }
         }
 
 
@@ -308,13 +310,18 @@ namespace VierGewinnt
         /// <returns>true if won, false if not</returns>
         public static bool checkWinDown(int nPlayer, int[,] nBoard, int[] nLastPlayedPos)
         {
-            if (nLastPlayedPos[0] > 2)
+            return checkForCountDown(nPlayer, nBoard, nLastPlayedPos,4);
+        }
+
+        public static bool checkForCountDown(int nPlayer, int[,] nBoard, int[] nLastPlayedPos, int pCount)
+        {
+            if (nLastPlayedPos[0] > pCount-2)
             {
                 // can not be won downwards
                 return false;
             }
             // all 4 downwards have to match
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < pCount; i++)
             {
                 // if one does not; can't be won this way
                 if (nBoard[nLastPlayedPos[0] + i, nLastPlayedPos[1]] != nPlayer)
@@ -332,70 +339,70 @@ namespace VierGewinnt
         /// <returns>true if won, false if not</returns>
         public static bool checkWinSideways(int nPlayer, int[,] nBoard, int[] nLastPlayedPos)
         {
-            // 4 cases: 2 at the end of line, 2 in middle
-            for (int nCase = 1; nCase < 5; nCase++)
+            return checkForCountSideways(nPlayer, nBoard, nLastPlayedPos,4);
+        }
+
+        public static bool checkForCountSideways(int nPlayer, int[,] nBoard, int[] nLastPlayedPos, int pCount)
+        {
+            int lToLeft = 0;
+            int lToRight = 0;
+            int lCount = 0;
+            bool lLoopControl = true;
+            // from last play position check all with same to left
+            while (lLoopControl)
             {
-                switch (nCase)
+                // make sure everything is in range
+                if (nLastPlayedPos[1] - lCount < 0 || nLastPlayedPos[1] - lCount > 6)
                 {
-                    case 1:
-                        // pos at left most corner
-                        if (nLastPlayedPos[1] > 3)
-                        {
-                            // can't be
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0], nLastPlayedPos[1]+1] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1]+2] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1]+3] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 2:
-                        // right most
-                        if (nLastPlayedPos[1] < 3)
-                        {
-
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0], nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1] - 2] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1] - 3] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 3:
-                        //middle left
-                        if (nLastPlayedPos[1] == 0 || nLastPlayedPos[1] >4)
-                        {
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0], nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1] +1] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1] +2] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 4:
-                        // middle right
-                        if (nLastPlayedPos[1] == 6 || nLastPlayedPos[1] < 2)
-                        {
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0], nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1] + 1] == nPlayer && nBoard[nLastPlayedPos[0], nLastPlayedPos[1] - 2] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
+                    lLoopControl = false;
                 }
-
-                
+                else if (nBoard[nLastPlayedPos[0], nLastPlayedPos[1] - lCount] != nPlayer)
+                {
+                    lLoopControl = false;
+                }
+                else
+                {
+                    // count amounts of steps to left
+                    lCount++;
+                }
             }
-            return false;
+            // store amount of same player marks
+            lToLeft = lCount;
+            // reset counter
+            lCount = 0;
+            lLoopControl = true;
+            while (lLoopControl)
+            {
+                // make sure everything is in range
+                if (nLastPlayedPos[1] + lCount < 0 || nLastPlayedPos[1] + lCount > 6)
+                {
+                    lLoopControl = false;
+                }
+                else if (nBoard[nLastPlayedPos[0], nLastPlayedPos[1] + lCount] != nPlayer)
+                {
+                    lLoopControl = false;
+                }
+                else
+                {
+                    // count amounts of steps to left
+                    lCount++;
+                }
+            }
+            lToRight = lCount;
+            int lCorrector = -1;
+            if (lToLeft == 0 || lToRight == 0)
+            {
+                lCorrector = 0;
+            }
+            // if amount >= pCount, then more or equals the amount of played than checked for
+            if (lToRight + lToLeft + lCorrector >= pCount)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -406,125 +413,127 @@ namespace VierGewinnt
         public static bool checkWinDiagonal(int nPlayer, int[,] nBoard, int[] nLastPlayedPos)
         {
             // 4 cases: 2 at the end of line, 2 in middle for each diagonal play
-            for (int nCase = 1; nCase < 9; nCase++)
+            return checkForCountDiagonal(nPlayer, nBoard, nLastPlayedPos,4);
+        }
+
+        public static bool checkForCountDiagonal(int nPlayer, int[,] nBoard, int[] nLastPlayedPos, int pCount)
+        {
+
+            int lToUpperLeft = 0;
+            int lToUpperRight = 0;
+            int lToLowerLeft = 0;
+            int lToLowerRight = 0;
+            int lCount = 0;
+            bool lLoopControl = true;
+            while (lLoopControl)
             {
-                switch (nCase)
+                // make sure everything is in range
+                if (nLastPlayedPos[1] - lCount < 0 || nLastPlayedPos[1] - lCount > 6 || nLastPlayedPos[0] + lCount < 0 || nLastPlayedPos[0] + lCount > 5)
                 {
-                    case 1:
-                        // pos at left most corner diagonal:\
-                        if (nLastPlayedPos[1] > 3 || nLastPlayedPos[0]>2)
-                        {
-
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0]+1, nLastPlayedPos[1] + 1] == nPlayer && nBoard[nLastPlayedPos[0]+2, nLastPlayedPos[1] + 2] == nPlayer && nBoard[nLastPlayedPos[0]+3, nLastPlayedPos[1] + 3] == nPlayer)
-                            {
-                                return true;
-                            }
-                            
-                        }
-                        break;
-                    case 2:
-                        // right most \
-                        if (nLastPlayedPos[1] < 3 || nLastPlayedPos[0] < 3)
-                        {
-
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0]-1, nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0]-2, nLastPlayedPos[1] - 2] == nPlayer && nBoard[nLastPlayedPos[0]-3, nLastPlayedPos[1] - 3] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 3:
-                        //middle left \
-                        if (nLastPlayedPos[1] == 0 || nLastPlayedPos[1] > 4 || nLastPlayedPos[0] == 0 || nLastPlayedPos[0] > 3)
-                        {
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0]-1, nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0]+1, nLastPlayedPos[1] + 1] == nPlayer && nBoard[nLastPlayedPos[0]+2, nLastPlayedPos[1] + 2] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 4:
-                        // middle right \
-                        if (nLastPlayedPos[1] == 6 || nLastPlayedPos[1] < 2 || nLastPlayedPos[0] == 5 || nLastPlayedPos[0] < 2)
-                        {
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0]-1, nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0]+1, nLastPlayedPos[1] + 1] == nPlayer && nBoard[nLastPlayedPos[0]-2, nLastPlayedPos[1] - 2] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 5:
-                        // pos at left most corner /
-                        if (nLastPlayedPos[1] > 3 || nLastPlayedPos[0] < 3)
-                        {
-
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0] - 1, nLastPlayedPos[1] + 1] == nPlayer && nBoard[nLastPlayedPos[0] - 2, nLastPlayedPos[1] + 2] == nPlayer && nBoard[nLastPlayedPos[0] - 3, nLastPlayedPos[1] + 3] == nPlayer)
-                            {
-                                return true;
-                            }
-
-                        }
-                        break;
-                    case 6:
-                        // right most /
-                        if (nLastPlayedPos[1] < 3 || nLastPlayedPos[0] > 2)
-                        {
-
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0] + 1, nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0] + 2, nLastPlayedPos[1] - 2] == nPlayer && nBoard[nLastPlayedPos[0] + 3, nLastPlayedPos[1] - 3] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 7:
-                        //middle left /
-                        if (nLastPlayedPos[1] == 0 || nLastPlayedPos[1] > 4 || nLastPlayedPos[0] == 5 || nLastPlayedPos[0] < 2)
-                        {
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0] + 1, nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0] - 1, nLastPlayedPos[1] + 1] == nPlayer && nBoard[nLastPlayedPos[0] - 2, nLastPlayedPos[1] + 2] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
-                    case 8:
-                        // middle right /
-                        if (nLastPlayedPos[1] == 6 || nLastPlayedPos[1] < 2 || nLastPlayedPos[0] == 0 || nLastPlayedPos[0] > 3)
-                        {
-                        }
-                        else
-                        {
-                            if (nBoard[nLastPlayedPos[0] + 1, nLastPlayedPos[1] - 1] == nPlayer && nBoard[nLastPlayedPos[0] - 1, nLastPlayedPos[1] + 1] == nPlayer && nBoard[nLastPlayedPos[0] + 2, nLastPlayedPos[1] - 2] == nPlayer)
-                            {
-                                return true;
-                            }
-                        }
-                        break;
+                    lLoopControl = false;
                 }
-
-
+                else if (nBoard[nLastPlayedPos[0] + lCount, nLastPlayedPos[1] - lCount] != nPlayer)
+                {
+                    lLoopControl = false;
+                }
+                else
+                {
+                    // count amounts of steps to left
+                    lCount++;
+                }
             }
-            return false;
+            
+            // store amount of same player marks
+            lToUpperRight = lCount;
+            // reset counter
+            lCount = 0;
+            lLoopControl = true;
+            while (lLoopControl)
+            {
+                // make sure everything is in range
+                if (nLastPlayedPos[1] + lCount < 0 || nLastPlayedPos[1] + lCount > 6 || nLastPlayedPos[0] + lCount < 0 || nLastPlayedPos[0] + lCount > 5)
+                {
+                    lLoopControl = false;
+                }
+                else if (nBoard[nLastPlayedPos[0]+lCount, nLastPlayedPos[1] + lCount] != nPlayer)
+                {
+                    lLoopControl = false;
+                }
+                else
+                {
+                    // count amounts of steps to left
+                    lCount++;
+                }
+            }
+            lToLowerRight = lCount;
+            // reset counter
+            lCount = 0;
+            lLoopControl = true;
+            while (lLoopControl)
+            {
+                // make sure everything is in range
+                if (nLastPlayedPos[1] + lCount < 0 || nLastPlayedPos[1] + lCount > 6 || nLastPlayedPos[0] - lCount < 0 || nLastPlayedPos[0] - lCount > 5)
+                {
+                    lLoopControl = false;
+                }
+                else if (nBoard[nLastPlayedPos[0]-lCount, nLastPlayedPos[1] + lCount]!= nPlayer)
+                {
+                    lLoopControl = false;
+                }
+                else
+                {
+                    // count amounts of steps to left
+                    lCount++;
+                }
+            }
+            lToLowerLeft = lCount;
+            // reset counter
+            lCount = 0;
+            // do the same but in steps to right
+            lLoopControl = true;
+            while (lLoopControl)
+            {
+                // make sure everything is in range
+                if (nLastPlayedPos[1] - lCount < 0 || nLastPlayedPos[1] - lCount > 6 || nLastPlayedPos[0] - lCount < 0 || nLastPlayedPos[0] - lCount > 5)
+                {
+                    lLoopControl = false;
+                }
+                else if (nBoard[nLastPlayedPos[0]-lCount, nLastPlayedPos[1] - lCount] != nPlayer)
+                {
+                    lLoopControl = false;
+                }
+                else
+                {
+                    // count amounts of steps to left
+                    lCount++;
+                }
+            }
+            lToUpperLeft = lCount;
+            int lCorrector = -1;
+            if (lToLowerLeft == 0 || lToUpperRight == 0)
+            {
+                lCorrector = 0;
+            }
+            // if amount >= pCount, then more or equals the amount of played than checked for
+            if (lToLowerLeft + lToUpperRight + lCorrector >= pCount)
+            {
+                return true;
+            }
+            lCorrector = -1;
+            if (lToLowerRight == 0 || lToUpperLeft == 0)
+            {
+                lCorrector = 0;
+            }
+            if (lToLowerRight + lToUpperLeft + lCorrector >= pCount)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+
+               
         }
 
         /// <summary>
