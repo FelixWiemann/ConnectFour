@@ -8,9 +8,10 @@ namespace VierGewinnt
 {
     public class Con4Bot:Player
     {
-        private int winWeight = 1;
-        private int looseWeight = -1;
+        private int winWeight = 500;
+        private int looseWeight = -500;
         public int nDifficulty = 5;
+        private int[] aSCORES_NOT_WIN = { 0, 1, 5, 10 };
 
         private static int[] lastPlayedPos = { 0, 0 };
 
@@ -53,7 +54,7 @@ namespace VierGewinnt
         public override void play()
         {
             // init array of scores for different possibilities
-            int[] scores = { 0, 0, 0, 0, 0, 0, 0 };
+            int[] lScores = { 0, 0, 0, 0, 0, 0, 0 };
             // copy the board
             int[,] board = Program.copyBoard(LocalBoard);
 
@@ -63,8 +64,13 @@ namespace VierGewinnt
             {
                 board = Program.copyBoard(LocalBoard);
                 // check reseted board
-                scores[y] = checkBest(board, y, nDifficulty, nPlayerNo);
+                lScores[y] = checkBest(board, y, nDifficulty, nPlayerNo);
             }
+            //Program.print("p " + nPlayerNo, false, true);
+            //Program.print("0" + ": " + lScores[0] + "|" + lScores[1] + "|" + lScores[2] + "|" + lScores[3] + "|" + lScores[4] + "|" + lScores[5] + "|" + lScores[6] + "|", false, true);
+            int maxValue = lScores.Max();
+            int maxIndex = lScores.ToList().IndexOf(maxValue);
+            best_column = maxIndex;
             // check the best possibility. if valid, do it, otherwise change column
             while (Program.getFirstEmpty(best_column) == -1)
             {
@@ -128,7 +134,7 @@ namespace VierGewinnt
         {
 
             // init score for node
-            int score = -100; // no move is pretty bad
+            int score = 0; // no move is pretty bad
             // store different things at beginning of testing node
             int[,] preBoard = Program.copyBoard(board);
             int prePlayer = currPlayer;
@@ -180,24 +186,66 @@ namespace VierGewinnt
             {
                 nply = nOpponentNo;
             }
+            int playerFac = 0;
+            if (currPlayer == nOpponentNo)
+            {
+                playerFac = -1;
+            }
+            else
+            {
+                playerFac = 1;
+            }
+
+            for (int i = 3; i > 1; i--)
+            {
+                if (Program.checkForCountDown(nPlayerNo, virtBoard, lastPlayedPos, i))
+                {
+                    //Program.drawBoard(board);
+                    // the deeper in the win is the less acceptable is a win
+                    score = aSCORES_NOT_WIN[i] * depth * currPlayer;
+                    printScore(score, depth);
+                    //print("BOTWIN");
+                    i = 1;
+                }
+                if (Program.checkForCountDiagonal(nPlayerNo, virtBoard, lastPlayedPos, i))
+                {
+                    //Program.drawBoard(board);
+                    // the deeper in the win is the less acceptable is a win
+                    score = aSCORES_NOT_WIN[i] * depth * currPlayer;
+                    printScore(score, depth);
+                    //print("BOTWIN");
+                    i = 1;
+                }
+                if (Program.checkForCountSideways(nPlayerNo, virtBoard, lastPlayedPos, i))
+                {
+                    //Program.drawBoard(board);
+                    // the deeper in the win is the less acceptable is a win
+                    score = aSCORES_NOT_WIN[i] * depth * currPlayer;
+                    printScore(score, depth);
+                    //print("BOTWIN");
+                    i = 1;
+                }
+            }
+            int[] scores = { 0, 0, 0, 0, 0, 0, 0 };
+            int lDeeperScore = 0;
             // play the other variants
             for (int i = 0; i < 7; i++)
             {
                 // check the score of the different plays
-                int thisscore = checkBest(virtBoard, i, depth - 1, nply);
-                //
-                if (thisscore > score && nply == nOpponentNo)
-                {
-                    score = thisscore;
-                    
-                }
-                if (thisscore < score && nply == nPlayerNo)
-                {
-                    score = thisscore;
-                    best_column = i;
-                }
+                scores[i] = checkBest(virtBoard, i, depth - 1, nply) * depth;
+            }
+            if (nply == nOpponentNo)
+            {
+                lDeeperScore = scores.Min() * depth;  
+            }
+            if (nply == nPlayerNo)
+            {
+                lDeeperScore = scores.Max() * depth;  
             }
 
+            score = lDeeperScore + score;
+//          Program.print("p "+ currPlayer,false,true);
+//          Program.print(depth + ": " + scores[0] + "|" + scores[1] + "|" + scores[2] + "|" + scores[3] + "|" + scores[4] + "|" + scores[5] + "|" + scores[6] + "|", false, true);
             // reset board
             board = Program.copyBoard(preBoard);
             currPlayer = prePlayer;

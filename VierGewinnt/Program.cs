@@ -45,7 +45,7 @@ namespace VierGewinnt
         /// <summary>
         /// file name of logfile
         /// </summary>
-        private static string sFileName = @"log";
+        private static string sFileName = @"log.txt";
         /// <summary>
         /// file path of logfile
         /// </summary>
@@ -194,7 +194,7 @@ namespace VierGewinnt
         /// <param name="sStringToPrint">string to print</param>
         /// <param name="bPrintOnConsole">print on console if true</param>
         /// <param name="bWriteInLog">print in file if true</param>
-        internal static void print(string sStringToPrint, bool bPrintOnConsole, bool bWriteInLog)
+        public static void print(string sStringToPrint, bool bPrintOnConsole, bool bWriteInLog)
         {
             if (bPrintOnConsole)
             {
