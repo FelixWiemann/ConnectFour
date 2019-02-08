@@ -206,6 +206,15 @@ namespace VierGewinnt
             }
         }
 
+        private static ConsoleColor[] colors = {ConsoleColor.Gray, ConsoleColor.Blue, ConsoleColor.Red};
+
+        public static void printColorful(string s, int playerNo)
+        {
+            Console.ForegroundColor = colors[playerNo];
+            Console.Write(s);
+            Console.ResetColor();
+        }
+
         /// <summary>
         /// prints the given string NOT in log file
         /// you may choose to log into console
@@ -257,12 +266,15 @@ namespace VierGewinnt
                 print("+-+-+-+-+-+-+-+", bPrintOnConsole, bWriteToLog);
                 for (int x = 0; x < 7; x++)
                 {
+                    printColorful("|",0);
+                    printColorful(sPlayers[nBoard[y, x]],nBoard[y,x]);
                     // append each line
                     sRow += "|" + sPlayers[nBoard[y, x]];
                 }
                 // finalizerow
                 sRow += "|";
-                print(sRow, bPrintOnConsole, bWriteToLog);
+                print("|");
+                //print(sRow, bPrintOnConsole, bWriteToLog);
                 // reset row
                 sRow = "";
             }
