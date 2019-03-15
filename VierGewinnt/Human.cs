@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ConnectFour;
+using System;
 
 namespace VierGewinnt
 {
     public class Human:Player
     {
         
-        public Human(int nPlayerNo, int nOpponentNo, int[,] board) : base(nPlayerNo, nOpponentNo, board)
+        public Human(int nPlayerNo, int nOpponentNo, Board board) : base(nPlayerNo, nOpponentNo, board)
         {
             PType = PlayerType.HUMAN_PLAYER;
         }
@@ -29,7 +26,7 @@ namespace VierGewinnt
             int column = -1;
             while (column == -1)
             {
-                Program.drawBoard(LocalBoard);
+                LocalBoard.drawBoard();
                 print("it is your turn, player " + player + "! \nwhere do you want to play?");
                 string s = Console.ReadLine();
                 if (s.Equals("m"))
@@ -57,7 +54,7 @@ namespace VierGewinnt
                             column = -1;
                             Console.ReadLine();
                         }
-                        else if (Program.getFirstEmpty(column, LocalBoard) == -1)
+                        else if (LocalBoard.getFirstEmpty(column) == -1)
                         {
                             print("can't play here, column full");
                             print("press Enter to acknowledge");

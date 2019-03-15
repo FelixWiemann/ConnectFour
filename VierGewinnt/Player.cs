@@ -1,9 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ConnectFour;
 
 namespace VierGewinnt
 {
@@ -75,9 +72,9 @@ namespace VierGewinnt
         /// <summary>
         /// current board stored by bot
         /// </summary>
-        private int[,] localBoard = { { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0, 0 } };
+        private Board localBoard = new Board();
 
-        public int[,] LocalBoard
+        public Board LocalBoard
         {
             get
             {
@@ -127,14 +124,14 @@ namespace VierGewinnt
             this.bWriteFile = bWriteFile;
             this.nOpponentNo = nOpponentNo;
         }
-        public Player(int nPlayerNo, int nOpponentNo, int[,] board)
+        public Player(int nPlayerNo, int nOpponentNo, Board board)
         {
             sFullLogFilePath = sFilePath + sFileName;
             this.nPlayerNo = nPlayerNo;
             this.bPrint = true;
             this.bWriteFile = true;
             this.nOpponentNo = nOpponentNo;
-            this.LocalBoard = Program.copyBoard(board);
+            this.LocalBoard = new Board(board);
         }
 
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ConnectFour;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,9 +13,6 @@ namespace VierGewinnt
         private int looseWeight = -500;
         public int nDifficulty = 5;
         private int[] aSCORES_NOT_WIN = { 0, 1, 5, 10 };
-
-        private static int[] lastPlayedPos = { 0, 0 };
-
         private int best_column = 0;
         /// <summary>
         /// constructor for the bot 
@@ -23,10 +21,10 @@ namespace VierGewinnt
         /// <param name="difficulty">difficulty the bot should have</param>
         /// <param name="opponent">opponent of the bot</param>
         /// <param name="board">board to play on</param>
-        public Con4Bot(int nPlayerNo, int difficulty, int nOpponentNo, int[,] board) : base(nPlayerNo, nOpponentNo, board)
+        public Con4Bot(int nPlayerNo, int difficulty, int nOpponentNo, Board board) : base(nPlayerNo, nOpponentNo, board)
         {
             this.nDifficulty = difficulty;
-            LocalBoard = Program.copyBoard(board);
+            LocalBoard = new Board(board);
             PType = PlayerType.MACHINE_PLAYER;
     }
         /// <summary>
@@ -38,10 +36,10 @@ namespace VierGewinnt
         /// <param name="board">board to play on</param>
         /// <param name="looseWeight">loosing weight of the bot</param>
         /// <param name="winWeight">winning weight of the bot</param>
-        public Con4Bot(int nPlayerNo, int difficulty, int nOpponentNo, int[,] board, int looseWeight, int winWeight) : base(nPlayerNo, nOpponentNo, board)
+        public Con4Bot(int nPlayerNo, int difficulty, int nOpponentNo, Board board, int looseWeight, int winWeight) : base(nPlayerNo, nOpponentNo, board)
         {
             this.nDifficulty = difficulty;
-            LocalBoard = Program.copyBoard(board);
+            LocalBoard = new Board(board);
             this.looseWeight = looseWeight;
             this.winWeight = winWeight;
             PType = PlayerType.MACHINE_PLAYER;
@@ -56,14 +54,15 @@ namespace VierGewinnt
             // init array of scores for different possibilities
             int[] lScores = { 0, 0, 0, 0, 0, 0, 0 };
             // copy the board
-            int[,] board = Program.copyBoard(LocalBoard);
+            Board board = new Board(LocalBoard);
 
             Console.Write("bot is thinking");
             // check each possibility
             for (int y = 0; y < 7; y++)
             {
-                board = Program.copyBoard(LocalBoard);
+                board = new Board(LocalBoard);
                 // check reseted board
+                // TODO run each in own thread to speed things up
                 lScores[y] = checkBest(board, y, nDifficulty, nPlayerNo);
             }
             //Program.print("p " + nPlayerNo, false, true);
@@ -72,7 +71,8 @@ namespace VierGewinnt
             int maxIndex = lScores.ToList().IndexOf(maxValue);
             best_column = maxIndex;
             // check the best possibility. if valid, do it, otherwise change column
-            while (Program.getFirstEmpty(best_column) == -1)
+            // TODO multiple same values -> choose random one to make things more intersting
+            while (LocalBoard.getFirstEmpty(best_column) == -1)
             {
                 best_column += 1;
                 if (best_column == 7)
@@ -89,17 +89,14 @@ namespace VierGewinnt
         /// </summary>
         /// <param name="player">player currently playing</param>
         /// <param name="x">column the player wants to play</param>
-        public int[,] playLocal(int player, int x, int[,] board)
+        public Board playLocal(int player, int x, Board board)
         {
-            int[,] pBoard = Program.copyBoard(board);
+            Board pBoard = new Board(board);
             if (bAccurateLog) {
-                print("playLocal: p= " + player + "; x= " + x);
+                //print("playLocal: p= " + player + "; x= " + x);
             }
-            // store played position fpr further use
-            lastPlayedPos[0] = Program.getFirstEmpty(x, pBoard); //y
-            lastPlayedPos[1] = x; //x
             // set the player on the board
-            pBoard[lastPlayedPos[0], lastPlayedPos[1]] = player;
+            pBoard.play(player, x, false);
             //Program.drawBoard(pBoard);
             return pBoard;
 
@@ -130,16 +127,15 @@ namespace VierGewinnt
         /// <param name="depth">how many more iterations should be done</param>
         /// <param name="currPlayer">player whose turn it is</param>
         /// <returns></returns>
-        private int checkBest(int[,] board, int column, int depth, int currPlayer)
+        private int checkBest(Board board, int column, int depth, int currPlayer)
         {
 
             // init score for node
             int score = 0; // no move is pretty bad
             // store different things at beginning of testing node
-            int[,] preBoard = Program.copyBoard(board);
+            Board preBoard = new Board(board);
             int prePlayer = currPlayer;
-            int[,] virtBoard = Program.copyBoard(board);
-            int[] preLastPlayed = { lastPlayedPos[0], lastPlayedPos[1] };
+            Board virtBoard = new Board(board);
 
             // depth not reached, otherwise return default score; do not play
             if (depth == 0)
@@ -147,32 +143,37 @@ namespace VierGewinnt
                 return score;
             }
             // if no valid play, return default score; do not play
-            if (Program.getFirstEmpty(column, board) == -1)
+            if (board.getFirstEmpty(column) == -1)
             {
                 return score;
             }
-            // log
-            if (bAccurateLog) { 
-                print("checkBest: p= " + currPlayer + "; x= " + column + "; d= " + depth);
-            }
+            
             // valid -> play
             virtBoard = playLocal(prePlayer, column, virtBoard);
             // check for win or loose
-            if (Program.checkwin(nPlayerNo, virtBoard, lastPlayedPos,false))
+            if (virtBoard.checkwin(nPlayerNo,false))
             {
                 //Program.drawBoard(board);
                 score = winWeight*depth;
                 printScore(score, depth);
+                if (bAccurateLog)
+                {
+                    print("found possible win for " + nPlayerNo);
+                }
                 //print("BOTWIN");
                 return score;
             }
-            else if (Program.checkwin(nOpponentNo, virtBoard, lastPlayedPos,false))
+            else if (virtBoard.checkwin(nOpponentNo,false))
             {
                 //Program.drawBoard(board);
                 score = looseWeight*depth;
                 printScore(score, depth);
                 // make sure to enter here if loss imminent
                 best_column = column;
+                if (bAccurateLog)
+                {
+                    print("found possible win for " + nOpponentNo);
+                }
                 //print("BOTLOOSE");
                 return score;
             }
@@ -198,7 +199,7 @@ namespace VierGewinnt
 
             for (int i = 3; i > 1; i--)
             {
-                if (Program.checkForCountDown(nPlayerNo, virtBoard, lastPlayedPos, i))
+                if (LocalBoard.checkForCountDown(currPlayer, i))
                 {
                     //Program.drawBoard(board);
                     // the deeper in the win is the less acceptable is a win
@@ -207,7 +208,7 @@ namespace VierGewinnt
                     //print("BOTWIN");
                     i = 1;
                 }
-                if (Program.checkForCountDiagonal(nPlayerNo, virtBoard, lastPlayedPos, i))
+                if (LocalBoard.checkForCountDiagonal(currPlayer, i))
                 {
                     //Program.drawBoard(board);
                     // the deeper in the win is the less acceptable is a win
@@ -216,7 +217,7 @@ namespace VierGewinnt
                     //print("BOTWIN");
                     i = 1;
                 }
-                if (Program.checkForCountSideways(nPlayerNo, virtBoard, lastPlayedPos, i))
+                if (LocalBoard.checkForCountSideways(currPlayer, i))
                 {
                     //Program.drawBoard(board);
                     // the deeper in the win is the less acceptable is a win
@@ -231,7 +232,8 @@ namespace VierGewinnt
             // play the other variants
             for (int i = 0; i < 7; i++)
             {
-                // check the score of the different plays
+                // check the score of the different plays 
+                // TODO if depth > threshold, run in async in different thread to speed up the process
                 scores[i] = checkBest(virtBoard, i, depth - 1, nply) * depth;
             }
             if (nply == nOpponentNo)
@@ -244,16 +246,29 @@ namespace VierGewinnt
             }
 
             score = lDeeperScore + score;
-//          Program.print("p "+ currPlayer,false,true);
-//          Program.print(depth + ": " + scores[0] + "|" + scores[1] + "|" + scores[2] + "|" + scores[3] + "|" + scores[4] + "|" + scores[5] + "|" + scores[6] + "|", false, true);
+            // log
+            if (bAccurateLog)
+            {
+                print(indent(depth) + "CB: p= " + currPlayer + "; x= " + column + "; d= " + depth + "; score= " + score + "; deep= "+ lDeeperScore);
+            }
+            //          Program.print("p "+ currPlayer,false,true);
+            //          Program.print(depth + ": " + scores[0] + "|" + scores[1] + "|" + scores[2] + "|" + scores[3] + "|" + scores[4] + "|" + scores[5] + "|" + scores[6] + "|", false, true);
             // reset board
-            board = Program.copyBoard(preBoard);
+            board = new Board(preBoard);
             currPlayer = prePlayer;
-            lastPlayedPos[0] = preLastPlayed[0];
-            lastPlayedPos[1] = preLastPlayed[1];
             printScore(score, depth);
             // return score of node
             return score;
+        }
+
+        private string indent(int depth)
+        {
+            string s = "";
+            for (int i = this.nDifficulty; i > nDifficulty-depth; i--)
+            {
+                s += "  ";
+            }
+            return s;
         }
     }
 }
