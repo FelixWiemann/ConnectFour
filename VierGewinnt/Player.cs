@@ -144,6 +144,7 @@ namespace VierGewinnt
         {
             print(s, bPrintOnConsole, bWriteFile);
         }
+        object __lockObj = new object();
         public void print(string s, bool bPrintOnConsole, bool bWriteFile)
         {
             if (bPrintOnConsole)
@@ -152,7 +153,10 @@ namespace VierGewinnt
             }
             if (bWriteFile)
             {
-                File.AppendAllText(sFullLogFilePath, s + Environment.NewLine);
+                lock (__lockObj)
+                {
+                    File.AppendAllText(sFullLogFilePath, s + Environment.NewLine);
+                }
             }
         }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace VierGewinnt
 {
@@ -53,20 +54,37 @@ namespace VierGewinnt
         {
             // init array of scores for different possibilities
             int[] lScores = { 0, 0, 0, 0, 0, 0, 0 };
+            int[] lScoresByThread = { 0, 0, 0, 0, 0, 0, 0 };
+
             // copy the board
             Board board = new Board(LocalBoard);
+            AsyncCheckBestThread[] threads = {null, null, null, null, null, null, null};
 
             Console.Write("bot is thinking");
             // check each possibility
+            string scoreprintA = "|";
             for (int y = 0; y < 7; y++)
             {
+                // create copy for use in task
                 board = new Board(LocalBoard);
-                // check reseted board
-                // TODO run each in own thread to speed things up
-                lScores[y] = checkBest(board, y, nDifficulty, nPlayerNo);
+                // check reseted board asynchronously
+                threads[y] = new AsyncCheckBestThread(this, board, y, nDifficulty, nPlayerNo);
             }
-            //Program.print("p " + nPlayerNo, false, true);
-            //Program.print("0" + ": " + lScores[0] + "|" + lScores[1] + "|" + lScores[2] + "|" + lScores[3] + "|" + lScores[4] + "|" + lScores[5] + "|" + lScores[6] + "|", false, true);
+            // wait until all tasks are done
+            for (int y = 0; y < 7; y++)
+            { 
+                // thread is active
+                while (threads[y].isThreadActive())
+                {
+                    // pause execution a bit
+                    Thread.Sleep(10);
+                }
+                // get the result after
+                lScores[y] = threads[y].getResult();
+                // for debugging
+                scoreprintA = scoreprintA + lScores[y] + "|";
+            }       
+   
             int maxValue = lScores.Max();
             int maxIndex = lScores.ToList().IndexOf(maxValue);
             best_column = maxIndex;
@@ -84,6 +102,80 @@ namespace VierGewinnt
             Program.play(nPlayerNo, best_column);
         }
 
+        /// <summary>
+        /// class for asynchronous call for checkBest
+        /// </summary>
+        private class AsyncCheckBestThread
+        {
+            private Thread t;
+            private ThreadStart tS;
+            private Board localBoard;
+            private int y;
+            private int nDepth;
+            private int playerNo;
+            private Con4Bot caller;
+
+            private int result;
+
+            /// <summary>
+            /// after creation of the async call, the calculation is started immedately.
+            /// </summary>
+            /// <param name="caller"></param>
+            /// <param name="b"></param>
+            /// <param name="y"></param>
+            /// <param name="nDifficulty"></param>
+            /// <param name="playerNo"></param>
+            public AsyncCheckBestThread(Con4Bot caller, Board b, int y, int nDifficulty, int playerNo)
+            {
+                this.caller = caller;
+                this.localBoard = b;
+                this.y = y;
+                this.nDepth = nDifficulty;
+                this.playerNo = playerNo;
+                this.tS = new ThreadStart(threadRunner);
+                this.t = new Thread(tS);
+                t.Name = "[CheckBest] y="+y+", d="+nDifficulty;
+                t.Start();
+            }    
+
+            /// <summary>
+            /// gets the name of the task
+            /// </summary>
+            /// <returns></returns>
+            public string Name()
+            {
+                return t.Name;
+            }
+            
+            /// <summary>
+            /// returns whether the thread is active
+            /// </summary>
+            /// <returns></returns>
+            public Boolean isThreadActive()
+            {
+                return this.t.IsAlive;
+            }       
+
+            /// <summary>
+            /// returns the result of the calculation
+            /// </summary>
+            /// <returns></returns>
+            public int getResult()
+            {
+                return this.result;
+            }
+
+            /// <summary>
+            /// the thread runner 
+            /// </summary>
+            private void threadRunner()
+            {
+                //Console.WriteLine("beginning thread " + t.Name);
+                result = caller.checkBest(localBoard, y, nDepth, playerNo);
+                //Console.WriteLine("done thread " + t.Name);
+            }
+
+        }
         /// <summary>
         /// sets the first free value in the given column x to the given player
         /// </summary>
